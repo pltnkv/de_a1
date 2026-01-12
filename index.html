@@ -538,13 +538,13 @@ const app = {
         let pool = [];
 
         // Logic: 
-        // If we have started words, give them 70% chance to appear to reinforce memory.
+        // If we have started words, give them 30% chance to appear to reinforce memory.
         // If we have no started words, take new words.
         // If we have no new words, take started words.
         
         if (startedWords.length > 0 && newWords.length > 0) {
             const roll = Math.random();
-            if (roll < 0.7) {
+            if (roll < 0.3) {
                 pool = startedWords; // Reinforce existing
             } else {
                 pool = newWords; // Introduce new
