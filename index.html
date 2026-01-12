@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Goethe A1 Trainer</title>
+    <style>
+        :root {
+            --primary: #009688;
+            --primary-dark: #00796b;
+            --accent: #FFC107;
+            --bg: #f5f5f5;
+            --text: #333;
+            --card-bg: #fff;
+            --success: #4CAF50;
+            --error: #F44336;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevent body scroll */
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        /* Main Content Area */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            position: relative;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Views */
+        .view {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- LEARNING TAB STYLES --- */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            text-align: center;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .word-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 0.5rem;
+        }
+
+        .word-title {
+            font-size: 2.2rem;
+            color: var(--primary-dark);
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        .audio-btn {
+            background: #e0f2f1;
+            border: none;
+            color: var(--primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: transform 0.1s;
+        }
+        .audio-btn:active { transform: scale(0.9); background: #b2dfdb; }
+
+        .word-meta {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        button.option-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text);
+            font-weight: 500;
+            touch-action: manipulation;
+        }
+
+        button.option-btn:active {
+            transform: scale(0.98);
+            background-color: #f9f9f9;
+        }
+
+        /* Fact/Success State */
+        .fact-container {
+            display: none;
+            margin-top: 1rem;
+            border-top: 1px solid #eee;
+            padding-top: 1rem;
+            text-align: left;
+        }
+        
+        .fact-box {
+            background-color: #e8f5e9;
+            border-left: 4px solid var(--success);
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 0.95rem;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .examples-box {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 0.95rem;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .examples-box ul {
+            margin: 5px 0 0 0;
+            padding-left: 20px;
+        }
+
+        .next-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+        .next-btn:active { transform: translateY(2px); }
+
+        /* --- DICTIONARY TAB STYLES --- */
+        
+        /* Global Progress Bar */
+        .global-progress-wrapper {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .progress-track {
+            background: #eee;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .word-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .word-item.learned {
+            border-left: 5px solid var(--success);
+        }
+
+        .word-info strong {
+            display: block;
+            font-size: 1.1rem;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .word-info span {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .progress-pill {
+            background: #eee;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #666;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .progress-pill.done {
+            background: var(--success);
+            color: white;
+        }
+
+        .reset-btn {
+            background: transparent;
+            border: 1px solid var(--error);
+            color: var(--error);
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-around;
+            padding-bottom: env(safe-area-inset-bottom);
+            height: 60px;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .nav-icon {
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<header id="header-title">Lernen (Learning)</header>
+
+<main>
+    <div id="view-learn" class="view active">
+        <div class="card">
+            <div id="quiz-content">
+                <div class="word-container">
+                    <div class="word-title" id="q-word">...</div>
+                    <button class="audio-btn" onclick="app.speakWord()" aria-label="Listen">
+                        🔊
+                    </button>
+                </div>
+                <div class="word-meta" id="q-meta">...</div>
+                
+                <div class="options-grid" id="q-options">
+                    </div>
+            </div>
+
+            <div id="quiz-empty" style="display:none; padding: 20px;">
+                <div style="font-size: 3rem;">🎉</div>
+                <h3>Herzlichen Glückwunsch!</h3>
+                <p>Du hast alle Wörter gelernt! (You have learned all words!)</p>
+                <button class="next-btn" onclick="app.resetProgress()">Reset Progress</button>
+            </div>
+
+            <div id="success-content" class="fact-container">
+                <h3 style="color: var(--success); margin: 0 0 10px 0;">Richtig! (Correct!)</h3>
+                
+                <div class="fact-box">
+                    <strong>💡 Interesting Fact:</strong><br>
+                    <span id="q-fact">...</span>
+                </div>
+
+                <div class="examples-box">
+                    <strong>🇩🇪 Beispiele:</strong>
+                    <ul id="q-examples"></ul>
+                </div>
+
+                <button class="next-btn" onclick="app.nextWord()">Weiter (Next Word)</button>
+            </div>
+        </div>
+        <div id="feedback-msg" style="text-align: center; height: 20px; color: var(--error); font-weight: bold;"></div>
+    </div>
+
+    <div id="view-dict" class="view">
+        <div class="global-progress-wrapper">
+            <div class="progress-label">
+                <span>Gesamtfortschritt (Total Progress)</span>
+                <span id="global-percent">0%</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="global-fill"></div>
+            </div>
+        </div>
+
+        <input type="text" class="search-bar" placeholder="Suche (Search)..." oninput="app.searchDict(this.value)">
+        
+        <div id="dict-list">
+            </div>
+
+        <button class="reset-btn" onclick="app.resetProgressConfirm()">
+            ⚠️ Fortschritt löschen (Clear Progress)
+        </button>
+    </div>
+</main>
+
+<nav>
+    <button class="nav-item active" onclick="app.switchTab('learn')">
+        <span class="nav-icon">🎓</span>
+        Lernen
+    </button>
+    <button class="nav-item" onclick="app.switchTab('dict')">
+        <span class="nav-icon">📚</span>
+        Wörterbuch
+    </button>
+</nav>
+
+<script src="data.js"></script>
+
+<script>
+const app = {
+    data: [],
+    currentWord: null,
+    LEARNED_THRESHOLD: 5,
+    speechSynth: window.speechSynthesis,
+
+    init() {
+        this.loadData();
+        this.updateGlobalProgress();
+        this.renderDict();
+        this.nextWord();
+    },
+
+    loadData() {
+        const stored = localStorage.getItem('goethe_a1_data');
+        if (stored) {
+            this.data = JSON.parse(stored);
+            // Merge new words if data.js has updates
+            if (typeof initialData !== 'undefined') {
+                const existingIds = new Set(this.data.map(d => d.id));
+                initialData.forEach(newItem => {
+                    if (!existingIds.has(newItem.id)) {
+                        this.data.push({...newItem, progress: 0});
+                    }
+                });
+            }
+        } else {
+            if (typeof initialData !== 'undefined') {
+                this.data = initialData.map(item => ({...item, progress: 0}));
+            } else {
+                this.data = [];
+            }
+            this.saveData();
+        }
+    },
+
+    saveData() {
+        localStorage.setItem('goethe_a1_data', JSON.stringify(this.data));
+        this.updateGlobalProgress();
+    },
+
+    // --- PROGRESS LOGIC ---
+
+    updateGlobalProgress() {
+        if(this.data.length === 0) return;
+
+        const totalPointsPossible = this.data.length * this.LEARNED_THRESHOLD;
+        const currentPoints = this.data.reduce((sum, word) => sum + (word.progress || 0), 0);
+        
+        let percent = Math.round((currentPoints / totalPointsPossible) * 100);
+        if (percent > 100) percent = 100;
+
+        document.getElementById('global-percent').innerText = `${percent}%`;
+        document.getElementById('global-fill').style.width = `${percent}%`;
+    },
+
+    resetProgressConfirm() {
+        if(confirm("Bist du sicher? Dein ganzer Fortschritt wird gelöscht. (Are you sure? All progress will be lost.)")) {
+            this.resetProgress();
+        }
+    },
+
+    resetProgress() {
+        this.data = this.data.map(w => ({...w, progress: 0}));
+        this.saveData();
+        this.renderDict();
+        this.updateGlobalProgress();
+        this.nextWord();
+        alert("Fortschritt gelöscht. (Progress cleared.)");
+    },
+
+    // --- TEXT TO SPEECH ---
+    speakWord() {
+        if(!this.currentWord) return;
+        
+        // Cancel previous speech if any
+        this.speechSynth.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(this.currentWord.de);
+        utterance.lang = 'de-DE';
+        utterance.rate = 0.9; // Slightly slower for learning
+        
+        this.speechSynth.speak(utterance);
+    },
+
+    // --- NAVIGATION ---
+    switchTab(tabName) {
+        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`view-${tabName}`).classList.add('active');
+        
+        const navIndex = tabName === 'learn' ? 0 : 1;
+        document.querySelectorAll('.nav-item')[navIndex].classList.add('active');
+        
+        if(tabName === 'learn') {
+            document.getElementById('header-title').innerText = "Lernen (Learning)";
+            // If we have no word loaded, or current word is already learned, refresh
+            if(!this.currentWord || (this.currentWord.progress >= this.LEARNED_THRESHOLD)) {
+                this.nextWord();
+            }
+        } else {
+            document.getElementById('header-title').innerText = "Wörterbuch (Dictionary)";
+            this.renderDict(); 
+            this.updateGlobalProgress();
+        }
+    },
+
+    // --- LEARNING ALGORITHM ---
+    nextWord() {
+        // Reset UI
+        document.getElementById('success-content').style.display = 'none';
+        document.getElementById('q-options').style.display = 'grid';
+        document.getElementById('feedback-msg').innerText = '';
+        document.getElementById('quiz-content').style.display = 'block';
+        document.getElementById('quiz-empty').style.display = 'none';
+
+        // 1. Get all Unlearned Words (progress < 5)
+        const unlearned = this.data.filter(w => w.progress < this.LEARNED_THRESHOLD);
+
+        // Check if finished
+        if (unlearned.length === 0) {
+            this.currentWord = null;
+            document.getElementById('quiz-content').style.display = 'none';
+            document.getElementById('quiz-empty').style.display = 'block';
+            return;
+        }
+
+        // 2. Prioritization Logic
+        // Split into "Started" (1-4) and "New" (0)
+        const startedWords = unlearned.filter(w => w.progress > 0);
+        const newWords = unlearned.filter(w => w.progress === 0);
+
+        let pool = [];
+
+        // Logic: 
+        // If we have started words, give them 70% chance to appear to reinforce memory.
+        // If we have no started words, take new words.
+        // If we have no new words, take started words.
+        
+        if (startedWords.length > 0 && newWords.length > 0) {
+            const roll = Math.random();
+            if (roll < 0.7) {
+                pool = startedWords; // Reinforce existing
+            } else {
+                pool = newWords; // Introduce new
+            }
+        } else if (startedWords.length > 0) {
+            pool = startedWords;
+        } else {
+            pool = newWords;
+        }
+
+        // 3. Pick random word from the chosen pool
+        const randomIndex = Math.floor(Math.random() * pool.length);
+        this.currentWord = pool[randomIndex];
+
+        // 4. Render Word
+        document.getElementById('q-word').innerText = this.currentWord.de;
+        
+        // Format meta info
+        let metaText = "";
+        if(this.currentWord.article === 'verb') metaText = "Verb";
+        else if(this.currentWord.article === 'adj') metaText = "Adjektiv";
+        else if(this.currentWord.article === 'adv') metaText = "Adverb";
+        else metaText = this.currentWord.article; // der/die/das
+        
+        document.getElementById('q-meta').innerText = metaText;
+
+        // 5. Generate Options
+        const correctAnswer = this.currentWord.ru[0]; 
+        const wrongAnswers = this.getDistractors(this.currentWord);
+        
+        let options = [correctAnswer, ...wrongAnswers];
+        options.sort(() => Math.random() - 0.5);
+
+        const optionsContainer = document.getElementById('q-options');
+        optionsContainer.innerHTML = '';
+
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => this.checkAnswer(opt, btn);
+            optionsContainer.appendChild(btn);
+        });
+    },
+
+    getDistractors(correctWord) {
+        if (correctWord.distractors && correctWord.distractors.length >= 3) {
+            return correctWord.distractors.slice(0, 3);
+        }
+        // Fallback: pick random from other words
+        const others = this.data.filter(w => w.id !== correctWord.id);
+        const shuffled = others.sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, 3).map(w => w.ru[0]);
+    },
+
+    checkAnswer(selectedOption, btnElement) {
+        // Prevent clicking multiple times
+        if(document.getElementById('success-content').style.display === 'block') return;
+
+        const correctOptions = this.currentWord.ru;
+        const isCorrect = correctOptions.includes(selectedOption);
+
+        if (isCorrect) {
+            // Visuals
+            btnElement.style.backgroundColor = '#e8f5e9';
+            btnElement.style.borderColor = 'var(--success)';
+            btnElement.innerText += " ✅";
+            
+            // Logic
+            if(this.currentWord.progress < this.LEARNED_THRESHOLD) {
+                this.currentWord.progress += 1;
+                this.saveData();
+            }
+            
+            // Auto-play audio on success (optional, good for reinforcement)
+            this.speakWord();
+            
+            this.showSuccessState();
+        } else {
+            // Error
+            btnElement.style.backgroundColor = '#ffebee';
+            btnElement.style.borderColor = 'var(--error)';
+            document.getElementById('feedback-msg').innerText = "Falsch, versuche es noch einmal! (Try again)";
+            
+            // Shake effect
+            btnElement.style.transform = "translateX(5px)";
+            setTimeout(() => btnElement.style.transform = "translateX(0)", 100);
+        }
+    },
+
+    showSuccessState() {
+        // Disable other buttons
+        const btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => b.disabled = true);
+
+        document.getElementById('feedback-msg').innerText = '';
+        document.getElementById('q-fact').innerText = this.currentWord.fact;
+        
+        const ul = document.getElementById('q-examples');
+        ul.innerHTML = '';
+        this.currentWord.examples.forEach(ex => {
+            const li = document.createElement('li');
+            li.innerText = ex;
+            ul.appendChild(li);
+        });
+        document.getElementById('success-content').style.display = 'block';
+    },
+
+    // --- DICTIONARY ---
+    renderDict(filterText = '') {
+        const container = document.getElementById('dict-list');
+        container.innerHTML = '';
+
+        // Sort: Learned at bottom, then Alphabetical
+        const sortedData = [...this.data].sort((a, b) => {
+            const aDone = a.progress >= this.LEARNED_THRESHOLD;
+            const bDone = b.progress >= this.LEARNED_THRESHOLD;
+            if (aDone && !bDone) return 1;
+            if (!aDone && bDone) return -1;
+            return a.de.localeCompare(b.de);
+        });
+
+        const filtered = sortedData.filter(w => {
+            const term = filterText.toLowerCase();
+            return w.de.toLowerCase().includes(term) || w.ru.some(r => r.toLowerCase().includes(term));
+        });
+
+        filtered.forEach(w => {
+            const div = document.createElement('div');
+            const isLearned = w.progress >= this.LEARNED_THRESHOLD;
+            div.className = `word-item ${isLearned ? 'learned' : ''}`;
+            
+            // Create mini Play button for dictionary
+            // We use a closure or bind to pass the specific word text
+            div.innerHTML = `
+                <div class="word-info">
+                    <strong onclick="app.speakText('${w.de}')" style="cursor:pointer">
+                        ${w.de} 🔊
+                    </strong>
+                    <span>${w.ru.join(', ')}</span>
+                </div>
+                <div class="progress-pill ${isLearned ? 'done' : ''}">
+                    ${w.progress}/${this.LEARNED_THRESHOLD}
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    },
+
+    searchDict(val) {
+        this.renderDict(val);
+    },
+    
+    // Helper for dictionary click-to-speak
+    speakText(text) {
+        this.speechSynth.cancel();
+        const ut = new SpeechSynthesisUtterance(text);
+        ut.lang = 'de-DE';
+        this.speechSynth.speak(ut);
+    }
+};
+
+// Start App
+window.onload = function() {
+    app.init();
+};
+</script>
+</body>
+</html>
